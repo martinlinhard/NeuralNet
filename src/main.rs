@@ -1,35 +1,24 @@
-#![allow(dead_code)]
 mod matrix;
+mod neural_net;
+
+use neural_net::NeuralNet;
 
 pub use crate::matrix::Matrix;
+use std::f64::consts::E;
 
 fn main() {
-    let m: Matrix<3, 3> = get_matrix_1();
-    let r: Matrix<3, 3> = get_matrix_1();
+    let input = Matrix::new([[0.9], [0.1], [0.8]]);
 
-    println!("{:?}", m * r);
-    //let r: Matrix<2, 1> = Matrix::new_zeroed();
-}
+    let wih = Matrix::new([[0.9, 0.3, 0.4], [0.2, 0.8, 0.2], [0.1, 0.5, 0.6]]);
 
-fn get_matrix_1() -> Matrix<3, 3> {
-    let mut out = Matrix::new_zeroed();
-    out.set_at_position(0, 0, 2.0);
-    out.set_at_position(0, 1, 4.0);
-    out.set_at_position(0, 2, 7.0);
+    let who = Matrix::new([[0.3, 0.7, 0.5], [0.6, 0.5, 0.2], [0.8, 0.1, 0.9]]);
 
-    out.set_at_position(1, 0, 8.0);
-    out.set_at_position(1, 1, -1.0);
-    out.set_at_position(1, 2, 2.0);
+    let sigmoid = |input: &f64| (1.0 / (1.0 + E.powf(*input * -1.0)));
 
-    out.set_at_position(2, 0, -1.0);
-    out.set_at_position(2, 1, 4.0);
-    out.set_at_position(2, 2, 3.0);
-    out
-}
+    let mut neural_net = NeuralNet::new(input, sigmoid);
+    neural_net.add_layer(wih);
+    neural_net.add_layer(who);
+    let result = neural_net.calculate();
 
-fn get_matrix_2() -> Matrix<2, 1> {
-    let mut out = Matrix::new_zeroed();
-    out.set_at_position(0, 0, 1.0);
-    out.set_at_position(1, 0, 0.5);
-    out
+    println!("{:?}", result);
 }

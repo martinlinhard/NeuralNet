@@ -21,6 +21,18 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     pub fn get_at_position(&self, row: usize, col: usize) -> f64 {
         self.inner[row][col]
     }
+
+    pub fn apply_to_each<F>(&mut self, callback: &F)
+    where
+        F: Fn(&f64) -> f64,
+    {
+        for row in self.inner.iter_mut() {
+            // for each element
+            for col_item in row.iter_mut() {
+                *col_item = callback(&col_item);
+            }
+        }
+    }
 }
 
 impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
@@ -30,7 +42,7 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
             .iter()
             .map(|i| {
                 i.iter()
-                    .map(|i1| format!("{:02.0}", i1))
+                    .map(|i1| format!("{:06.3}", i1))
                     .collect::<Vec<_>>()
                     .join(" ")
             })
