@@ -35,11 +35,15 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         index
     }
 
-    fn calculate_indices() -> Vec<(usize, usize)> {
+    fn calculate_indices() -> impl ParallelIterator<Item = (usize, usize)> {
         (0..R)
-            .map(|index_row| (0..C).map(move |index_col| (index_row, index_col)))
+            .into_par_iter()
+            .map(|index_row| {
+                (0..C)
+                    .into_par_iter()
+                    .map(move |index_col| (index_row, index_col))
+            })
             .flatten()
-            .collect::<Vec<_>>()
     }
 
     pub fn set_at_position(&mut self, row: usize, col: usize, val: f64) {
@@ -91,7 +95,6 @@ impl<const RI: usize, const CI: usize, const RO: usize, const CO: usize> Mul<Mat
         let indices = Matrix::<RI, CO>::calculate_indices();
 
         let res = indices
-            .into_par_iter()
             .map(|(index_row, index_col)| {
                 let mut acc = 0.0;
                 for i in 0..CI {
