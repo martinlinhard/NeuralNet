@@ -91,12 +91,12 @@ impl<const RI: usize, const CI: usize, const RO: usize, const CO: usize> Mul<Mat
         let indices = Matrix::<RI, CO>::calculate_indices();
 
         let res = indices
-            .par_iter()
+            .into_par_iter()
             .map(|(index_row, index_col)| {
                 let mut acc = 0.0;
                 for i in 0..CI {
-                    let current_left = self.get_at_position(*index_row, i);
-                    let current_right = rhs.get_at_position(i, *index_col);
+                    let current_left = self.get_at_position(index_row, i);
+                    let current_right = rhs.get_at_position(i, index_col);
                     acc += current_left * current_right;
                 }
 
