@@ -2,45 +2,80 @@ use rayon::prelude::*;
 use std::array::IntoIter;
 use std::{fmt::Debug, ops::Mul};
 
-pub struct Matrix<const R: usize, const C: usize> {
+pub struct Matrix {
     inner: Vec<f64>,
+    rows: usize,
+    columns: usize,
 }
 
-impl<const R: usize, const C: usize> Matrix<R, C> {
-    pub unsafe fn new_unchecked(inner: Vec<Vec<f64>>) -> Self {
+impl Matrix {
+    pub unsafe fn new_unchecked(inner: Vec<Vec<f64>>, rows: usize, columns: usize) -> Self {
         let inner = inner.into_iter().map(|i| i.into_iter()).flatten().collect();
 
-        Self { inner }
+        Self {
+            inner,
+            rows,
+            columns,
+        }
     }
 
-    pub fn new(inner: [[f64; C]; R]) -> Self {
+    pub fn new<const R: usize, const C: usize>(inner: [[f64; C]; R]) -> Self {
         let inner = IntoIter::new(inner).map(IntoIter::new).flatten().collect();
 
-        Self { inner }
+        Self {
+            inner,
+            rows: R,
+            columns: C,
+        }
     }
 
-    fn new_1d(inner: Vec<f64>) -> Self {
-        Self { inner }
+    fn new_1d(inner: Vec<f64>, rows: usize, columns: usize) -> Self {
+        Self {
+            inner,
+            rows,
+            columns,
+        }
     }
 
-    pub fn new_zeroed() -> Self {
-        let inner = vec![0.0; C * R];
+    pub fn new_zeroed(rows: usize, columns: usize) -> Self {
+        let inner = vec![0.0; rows * columns];
 
-        Self { inner }
+        Self {
+            inner,
+            rows,
+            columns,
+        }
     }
 
     #[inline]
     fn calculate_index(&self, row: usize, col: usize) -> usize {
-        let index = (row * C) + col;
+        let index = (row * self.columns) + col;
         index
     }
 
-    fn calculate_indices() -> impl ParallelIterator<Item = (usize, usize)> {
-        (0..R)
+    fn calculate_indices(
+        rows: usize,
+        columns: usize,
+    ) -> impl ParallelIterator<Item = (usize, usize)> {
+        (0..rows)
             .into_par_iter()
-            .map(|index_row| {
-                (0..C)
+            .map(move |index_row| {
+                (0..columns)
                     .into_par_iter()
+                    .map(move |index_col| (index_row, index_col))
+            })
+            .flatten()
+    }
+
+    fn calculate_indices_single(
+        rows: usize,
+        columns: usize,
+    ) -> impl Iterator<Item = (usize, usize)> {
+        (0..rows)
+            .into_iter()
+            .map(move |index_row| {
+                (0..columns)
+                    .into_iter()
                     .map(move |index_col| (index_row, index_col))
             })
             .flatten()
@@ -65,11 +100,11 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 }
 
-impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
+impl Debug for Matrix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let inner = self
             .inner
-            .chunks(C)
+            .chunks(self.columns)
             .map(|i| {
                 i.iter()
                     .map(|i1| format!("{:06.3}", i1))
@@ -79,25 +114,23 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
             .collect::<Vec<_>>()
             .join("\n");
 
-        write!(f, "{}", inner)
+        write!(f, "Matrix ({}X{})\n{}", self.rows, self.columns, inner)
     }
 }
 
-impl<const RI: usize, const CI: usize, const RO: usize, const CO: usize> Mul<Matrix<RO, CO>>
-    for Matrix<RI, CI>
-{
-    type Output = Matrix<RI, CO>;
+impl Mul for Matrix {
+    type Output = Matrix;
 
-    fn mul(self, rhs: Matrix<RO, CO>) -> Self::Output {
+    fn mul(self, rhs: Matrix) -> Self::Output {
         // make sure that the dimensions are valid
-        assert!(CI == RO, "Invalid dimensions!");
+        assert!(self.columns == rhs.rows, "Invalid dimensions!");
 
-        let indices = Matrix::<RI, CO>::calculate_indices();
+        let indices = Matrix::calculate_indices(self.rows, rhs.columns);
 
         let res = indices
             .map(|(index_row, index_col)| {
                 let mut acc = 0.0;
-                for i in 0..CI {
+                for i in 0..self.columns {
                     let current_left = self.get_at_position(index_row, i);
                     let current_right = rhs.get_at_position(i, index_col);
                     acc += current_left * current_right;
@@ -111,6 +144,6 @@ impl<const RI: usize, const CI: usize, const RO: usize, const CO: usize> Mul<Mat
             })
             .collect();
 
-        Matrix::new_1d(res)
+        Matrix::new_1d(res, self.rows, rhs.columns)
     }
 }

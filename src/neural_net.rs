@@ -1,13 +1,13 @@
 use crate::Matrix;
 
-pub struct NeuralNet<F, const N: usize> {
+pub struct NeuralNet<F> {
     activation_function: F,
-    input: Matrix<N, 1>,
-    layers: Vec<Matrix<N, N>>,
+    input: Matrix,
+    layers: Vec<Matrix>,
 }
 
-impl<F, const N: usize> NeuralNet<F, N> {
-    pub fn new(input: Matrix<N, 1>, activation_function: F) -> Self {
+impl<F> NeuralNet<F> {
+    pub fn new(input: Matrix, activation_function: F) -> Self {
         Self {
             input,
             activation_function,
@@ -15,11 +15,11 @@ impl<F, const N: usize> NeuralNet<F, N> {
         }
     }
 
-    pub fn add_layer(&mut self, layer: Matrix<N, N>) {
+    pub fn add_layer(&mut self, layer: Matrix) {
         self.layers.push(layer);
     }
 
-    pub fn calculate(self) -> Matrix<N, 1>
+    pub fn calculate(self) -> Matrix
     where
         F: Fn(&f64) -> f64,
     {
