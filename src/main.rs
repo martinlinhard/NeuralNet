@@ -15,11 +15,11 @@ fn main() {
 
     let sigmoid = |input: &f64| (1.0 / (1.0 + E.powf(*input * -1.0)));
 
-    let mut neural_net = NeuralNet::new(input, sigmoid);
+    let mut neural_net = NeuralNet::new(sigmoid);
     neural_net.add_layer(wih);
     neural_net.add_layer(who);
 
-    let result = neural_net.calculate();
+    let result = neural_net.calculate(input);
 
     println!("{:?}", result);
 }

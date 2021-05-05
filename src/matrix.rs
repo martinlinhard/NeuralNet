@@ -118,10 +118,10 @@ impl Debug for Matrix {
     }
 }
 
-impl Mul for Matrix {
+impl Mul<&Matrix> for &Matrix {
     type Output = Matrix;
 
-    fn mul(self, rhs: Matrix) -> Self::Output {
+    fn mul(self, rhs: &Matrix) -> Self::Output {
         // make sure that the dimensions are valid
         assert!(self.columns == rhs.rows, "Invalid dimensions!");
 
