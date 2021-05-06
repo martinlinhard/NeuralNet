@@ -1,6 +1,9 @@
 use rayon::prelude::*;
-use std::array::IntoIter;
-use std::{fmt::Debug, ops::Mul};
+use std::{array::IntoIter, ops::Sub};
+use std::{
+    fmt::Debug,
+    ops::{Add, Mul},
+};
 
 pub struct Matrix {
     inner: Vec<f64>,
@@ -145,5 +148,43 @@ impl Mul<&Matrix> for &Matrix {
             .collect();
 
         Matrix::new_1d(res, self.rows, rhs.columns)
+    }
+}
+
+impl Add for &Matrix {
+    type Output = Matrix;
+    fn add(self, rhs: &Matrix) -> Self::Output {
+        assert!(
+            self.columns == rhs.columns && self.rows == rhs.rows,
+            "Invalid dimensions!"
+        );
+
+        let result = self
+            .inner
+            .par_iter()
+            .zip(rhs.inner.par_iter())
+            .map(|(left, right)| left + right)
+            .collect();
+
+        Matrix::new_1d(result, self.rows, self.columns)
+    }
+}
+
+impl Sub for &Matrix {
+    type Output = Matrix;
+    fn sub(self, rhs: &Matrix) -> Self::Output {
+        assert!(
+            self.columns == rhs.columns && self.rows == rhs.rows,
+            "Invalid dimensions!"
+        );
+
+        let result = self
+            .inner
+            .par_iter()
+            .zip(rhs.inner.par_iter())
+            .map(|(left, right)| left - right)
+            .collect();
+
+        Matrix::new_1d(result, self.rows, self.columns)
     }
 }

@@ -17,7 +17,7 @@ impl<F: Sync> NeuralNet<F> {
         self.layers.push(layer);
     }
 
-    pub fn calculate(&self, input: Matrix) -> Matrix
+    pub fn forward_propagation(&self, input: Matrix) -> Matrix
     where
         F: Fn(&f64) -> f64,
     {
@@ -26,5 +26,17 @@ impl<F: Sync> NeuralNet<F> {
             result.apply_to_each(&self.activation_function);
             result
         })
+    }
+
+    pub fn backward_propagation(&self, actual_result: &Matrix, expected_result: &Matrix) {
+        let error = expected_result - actual_result;
+
+        // visit layers in reverse order; multiply them by the previous error
+        self.layers
+            .iter()
+            .rev()
+            .fold(error, |previous_error, current_layer| {
+                dbg!(current_layer * &previous_error)
+            });
     }
 }

@@ -19,7 +19,9 @@ fn main() {
     neural_net.add_layer(wih);
     neural_net.add_layer(who);
 
-    let result = neural_net.calculate(input);
+    let result = neural_net.forward_propagation(input);
 
-    println!("{:?}", result);
+    let expected_result = Matrix::new([[1.0], [1.0], [1.0]]);
+
+    neural_net.backward_propagation(&result, &expected_result);
 }
