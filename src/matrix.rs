@@ -92,11 +92,11 @@ impl Matrix {
 
     pub fn apply_to_each<F>(&mut self, callback: &F)
     where
-        F: Fn(&f64) -> f64,
+        F: Fn(&f64) -> f64 + Sync,
     {
-        for item in self.inner.iter_mut() {
+        self.inner.par_iter_mut().for_each(|item| {
             *item = callback(&item);
-        }
+        });
     }
 }
 

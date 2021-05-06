@@ -5,7 +5,7 @@ pub struct NeuralNet<F> {
     layers: Vec<Matrix>,
 }
 
-impl<F> NeuralNet<F> {
+impl<F: Sync> NeuralNet<F> {
     pub fn new(activation_function: F) -> Self {
         Self {
             activation_function,
