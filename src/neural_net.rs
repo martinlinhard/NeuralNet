@@ -24,7 +24,7 @@ impl<F: Sync> NeuralNet<F> {
         self.layers.iter().fold(input, |previous, current_layer| {
             let mut result = current_layer * &previous;
             result.apply_to_each(&self.activation_function);
-            result
+            dbg!(result)
         })
     }
 
